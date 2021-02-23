@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name : kuard2
+  namespace: elk
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 10M
+    ingress.kubernetes.io/rewrite-target: /
+   #nginx.ingress.kubernetes.io/proxy-ssl-secret: "elk/elastic-certificate-pem" #need to point to ES certificate pem.
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"  #must be false if you use elasticsearch-utils to generate CA.
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"  #must be HTTPS
+   
+spec:
+  tls:
+  - hosts:
+    - elk.redelk.link
+    secretName: my-tls-secret
+  - hosts:
+    - elk.mntr.link
+    secretName: mntr-secret
+  rules:
+  - host: "elk.redelk.link"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: elasticsearch-master
+            port:
+             number: 9200
+  - host: "elk.mntr.link"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana-kibana
+            port:
+             number: 5601
+
